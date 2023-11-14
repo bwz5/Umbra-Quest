@@ -9,12 +9,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.Timer;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
 public class GameComponent extends JPanel implements MouseListener, KeyListener {
     boolean isActive;
+
+    boolean showingInventory = false;
+
+    boolean gameOver = false;
+
+    TimerTask timerTask;
 
     int toggleMovementCount = 0;
 
@@ -25,17 +32,21 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
 
     Lighting lighting = new Lighting(this,500); // for the lighting effect of the game
 
-    Set<Entity> entities = new HashSet<>(); // the npcs
+    List<Entity> entities = new ArrayList<>();  // the npcs
 
     List<Enemy> enemies = new LinkedList<>(); // the enemies
 
     Set<Interactable> interactables = new HashSet<>(); // the interactables
-    List<List<String>> records; // the map's loaded information
+    public List<List<String>> records; // the map's loaded information
+
+    List<Projectile> projectilesList = new LinkedList<>();
 
     public GameComponent() {
 
         this.setFocusable(true);
         this.requestFocus();
+
+        this.add(player.inventory);
 
         this.setLayout(new BorderLayout());
 
@@ -58,31 +69,48 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
         isActive = true;
         repaint();
     }
-
     public void stopGame() {
+        System.out.println("thank you for playing my game");
 
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        paintFunctions(g);
+        if (showingInventory){
+            player.inventory.paintComponent(g);
+        }
+        repaint();
+
+
+    }
+
+    public void paintFunctions(Graphics g){
         if (!isActive) {
             try { // makes the start screen background image
-                BufferedImage myPicture = ImageIO.read(new File("img/EVER QUEST.png"));
+                worldX = 20;
+                worldY = 22;
+                BufferedImage myPicture;
+                if (gameOver){
+                    myPicture = ImageIO.read(new File("img/gameover.png"));
+
+                } else {
+                    myPicture = ImageIO.read(new File("img/UMBRAQuest.png"));
+                }
                 ImageIcon imageIcon = new ImageIcon(myPicture);
                 Image image = imageIcon.getImage(); // transform it
                 Image newimg = image.getScaledInstance(500, 500, java.awt.Image.SCALE_SMOOTH); // scale it the smooth way
                 imageIcon = new ImageIcon(newimg);
                 imageIcon.paintIcon(this,g,0,0);
             } catch (Exception ignored){}
-             // paints the character
+            // paints the character
         } else {
-
-            tileDrawer.drawTiles(g,worldX,worldY,records,entities, interactables, enemies);
+            tileDrawer.drawTiles(g,worldX,worldY,records,entities, interactables, enemies, this);
             lighting.draw(g);
             player.paintCharacter(g);
 
-        }
+        };
     }
 
     @Override
@@ -91,6 +119,10 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
         int y = e.getY();
         for (Entity i : entities){
             if (x <= i.drawnX + 50 && x >= i.drawnX && y <= i.drawnY + 50 && y >= i.drawnY ){
+                try {
+                    SimpleAudioPlayer temp = new SimpleAudioPlayer();
+                    temp.playSound(temp.clickSound);
+                } catch (Exception ignored){}
                 i.showDialogue(this.getGraphics(),this);
             }
         }
@@ -119,6 +151,10 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
 
     @Override
     public void keyPressed(KeyEvent e) {
+        player.checkNear(enemies,this);
+
+        int tempCode = e.getKeyCode();
+
         toggleMovementCount += 1;
 
         int playerWorldX = worldX + 5;
@@ -129,51 +165,75 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
         } else {
             player.phase = 1;
         }
-        if (e.getKeyCode() == KeyEvent.VK_UP){
+        if (tempCode == KeyEvent.VK_UP){
             player.direction = "up";
-            if ( !records.get(playerWorldX-1).get(playerWorldY).equals("0") ){
+            if ( !records.get(playerWorldX-1).get(playerWorldY).equals("0") && !records.get(playerWorldX-1).get(playerWorldY).equals("M") && !records.get(playerWorldX-1).get(playerWorldY).equals("X") && !records.get(playerWorldX-1).get(playerWorldY).equals("E")){
                 worldX -= 1;
             }
 
-        }else if (e.getKeyCode() == KeyEvent.VK_DOWN){
+        }else if (tempCode == KeyEvent.VK_DOWN){
             player.direction = "down";
-            if ( !records.get(playerWorldX+1).get(playerWorldY).equals("0")){
+            if ( !records.get(playerWorldX+1).get(playerWorldY).equals("0") && !records.get(playerWorldX+1).get(playerWorldY).equals("M") && !records.get(playerWorldX+1).get(playerWorldY).equals("X") && !records.get(playerWorldX+1).get(playerWorldY).equals("E")){
                 worldX += 1;
             }
 
-        } else if (e.getKeyCode() == KeyEvent.VK_LEFT){
-            if ( !records.get(playerWorldX).get(playerWorldY-1).equals("0")){
+        } else if (tempCode == KeyEvent.VK_LEFT){
+            if ( !records.get(playerWorldX).get(playerWorldY-1).equals("0") && !records.get(playerWorldX).get(playerWorldY-1).equals("M") && !records.get(playerWorldX).get(playerWorldY-1).equals("X") && !records.get(playerWorldX).get(playerWorldY-1).equals("E")){
                 worldY -=1;
             }
             player.direction = "left";
 
-        } else if (e.getKeyCode() == KeyEvent.VK_RIGHT){
+        } else if (tempCode == KeyEvent.VK_RIGHT){
             player.direction = "right";
-            if ( !records.get(playerWorldX).get(playerWorldY+1).equals("0")){
+            if ( !records.get(playerWorldX).get(playerWorldY+1).equals("0") && !records.get(playerWorldX).get(playerWorldY+1).equals("M") && !records.get(playerWorldX).get(playerWorldY+1).equals("X") && !records.get(playerWorldX).get(playerWorldY+1).equals("E")){
                 worldY +=1;
             }
-        } else if (e.getKeyCode() == KeyEvent.VK_X){
+        } else if (tempCode == KeyEvent.VK_X){
             if (player.mana > 0) {
-                Projectile fireball = new Projectile(player.direction);
-                fireball.shootProjectile(getGraphics());
-                player.mana -= 1;
-                for(Enemy i : enemies){
-                    if (i.checkHit(player)){
-                        i.takeDamage(enemies);
+                try {
+                    SimpleAudioPlayer temp = new SimpleAudioPlayer();
+                    temp.playFireBallSound(temp.fireballFilePath);
+                } catch (Exception ignored){}
+                for (Projectile k : projectilesList){
+                    if (!k.alive){
+                        projectilesList.clear();
                     }
                 }
+                if (projectilesList.isEmpty()){
+                    Projectile temp = new Projectile(player.direction,worldX, worldY);
+                    projectilesList.add(temp);
+                    player.mana -= 1;
+                }
+            }
+        } else if (tempCode == KeyEvent.VK_I){
+            if (!showingInventory){
+            player.inventory.printText();
+            showingInventory = true;
+
+            } else {
+                showingInventory = false;
+
             }
         }
 
+        if (records.get(worldX+5).get(worldY+5).equals("?")){
+            records.get(worldX+5).set(worldY+5, "1");
+            try {
+                SimpleAudioPlayer temp = new SimpleAudioPlayer();
+                temp.playSound(temp.keyCollected);
+            } catch (Exception ignored){}
+            player.inventory.addItem("Key", "A magical key that opens a door.");
+            player.collectedKey = true;
+        }
+
         for (Interactable i : interactables){
-            i.collisionDetector(worldX+5,worldY +5, this);
+            i.collisionDetector(worldX+5,worldY +5, this, player);
         }
         if (toggleMovementCount % 4 == 0){
             player.addMana();
         }
 
-
-        repaint();
+        //repaint();
     }
 
     @Override

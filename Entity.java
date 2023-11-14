@@ -9,12 +9,16 @@ public class Entity {
     int entityX;
     int entityY;
 
-    int drawnX;  // pixel locations
-    int drawnY;
+    public int drawnX;  // pixel locations
+    public int drawnY;
 
     String name;
 
     String dialogueFile;
+
+    Image image; // the wall image
+
+    Image image2; // the entity image
 
     String dialogueText;
 
@@ -24,6 +28,15 @@ public class Entity {
         entityX = x;
         entityY = y;
         this.name = name;
+        try {
+            BufferedImage myPicture = ImageIO.read(new File("img/wall.jpeg"));
+            ImageIcon imageIcon = new ImageIcon(myPicture);
+            image = imageIcon.getImage(); // transform it
+
+            BufferedImage myPicture2 = ImageIO.read(new File("img/" + name + ".png"));
+            ImageIcon imageIcon2 = new ImageIcon(myPicture2);
+            image2 = imageIcon2.getImage(); // transform it
+        } catch (Exception ignored){}
     }
 
     public void showDialogue(Graphics g, JComponent frame){
@@ -34,20 +47,11 @@ public class Entity {
         dialogueBox.drawImage(g, frame);
     }
     public void draw(Graphics g, int currentX, int currentY, String fileName){
-        try {
             drawnX = currentX;
             drawnY = currentY;
 
-            BufferedImage myPicture = ImageIO.read(new File("img/wall.jpeg"));
-            ImageIcon imageIcon = new ImageIcon(myPicture);
-            Image image = imageIcon.getImage(); // transform it
             g.drawImage(image,currentX,currentY,50,50,null );
-
-            BufferedImage myPicture2 = ImageIO.read(new File("img/"+fileName+ ".png"));
-            ImageIcon imageIcon2 = new ImageIcon(myPicture2);
-            Image image2 = imageIcon2.getImage(); // transform it
             g.drawImage(image2,currentX,currentY,50,50,null );
-        }catch (Exception ignored){}
     }
 
     @Override

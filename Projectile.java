@@ -3,6 +3,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.TimerTask;
 
 public class Projectile {
     int spawnX; 
@@ -14,13 +15,23 @@ public class Projectile {
     
     String direction;
 
-    public Projectile( String d){
-        this.spawnX = 250;
-        this.spawnY = 250;
-        this.direction = d;
-    }
+    double speed = 1;
 
-    public void shootProjectile(Graphics g){
+    int graphicsX;
+    int graphicsY;
+
+
+    boolean alive;
+
+    public Projectile( String d, int x , int y){
+        this.direction = d;
+        spawnX = x;
+        spawnY = y;
+        alive = true;
+
+        graphicsX = 250;
+        graphicsY = 250;
+
         try {
             String filePath = "img/fireball" + direction + ".png";
             BufferedImage myPicture = ImageIO.read(new File(filePath));
@@ -28,31 +39,33 @@ public class Projectile {
             Image image = imageIcon.getImage(); // transform it
             newimg = image.getScaledInstance(50, 50, java.awt.Image.SCALE_SMOOTH);
         } catch (Exception ignored){}
+    }
+
+    public void update(){
+        if (!alive){
+            return;
+        }
+        if (graphicsX < 0 || graphicsX > 500 || graphicsY < 0 || graphicsY > 500){
+            alive = false;
+        }
 
         if (direction.equals("up")){
-            while (spawnY >= 0){
-                    g.drawImage(newimg,spawnX,spawnY,null);
-                    spawnY -= 50;
-                }
-            }
-        else if (direction.equals("down")){
-            while (spawnY <= 500){
-                g.drawImage(newimg,spawnX,spawnY,null);
-                spawnY += 50;
-            }
-
+            graphicsY -= speed;
+        } else if (direction.equals("down")){
+            graphicsY += speed;
         } else if (direction.equals("left")){
-            while (spawnX >= 0){
-                g.drawImage(newimg,spawnX,spawnY,null);
-                spawnX -= 50;
-            }
-
-        } else if (direction.equals("right")){
-            while (spawnX <= 500){
-                g.drawImage(newimg,spawnX,spawnY,null);
-                spawnX += 50;
-            }
-
+            graphicsX -= speed;
+        } else {
+            graphicsX += speed;
         }
+    }
+
+    public void drawProjectile(Graphics g, GameComponent game){
+        if (!alive){
+            return;
+        }
+        try {
+            g.drawImage(newimg, graphicsX, graphicsY, 50,50,null);
+        } catch (Exception ignored){}
     }
 }

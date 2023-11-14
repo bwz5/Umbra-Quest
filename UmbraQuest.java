@@ -1,19 +1,9 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.io.*;
-import java.util.Hashtable;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 
-/**
- * Main class for Click-a-Dot game. Creates window with game board, score label, start button, and
- * sliders for target size and speed.
- */
 public class UmbraQuest {
 
     /**
@@ -24,19 +14,6 @@ public class UmbraQuest {
         SwingUtilities.invokeLater(() -> createAndShowGUI());
     }
 
-    /**
-     * Create application window.
-     * <ul>
-     * <li>Window title is "Click-a-Dot"
-     * <li>Game board is in center of window, expands to fill window size
-     * <li>Score label is at top; text is centered
-     * <li>Start button is at bottom
-     * <li>Size slider is at right
-     * <li>Speed slider is at left
-     * </ul>
-     * Window should be disposed when closed, and all game tasks stopped. This should be sufficient
-     * for application to shut down gracefully.
-     */
     private static void createAndShowGUI() {
         // Create frame.
         JFrame frame = new JFrame("UMBRA QUEST");
@@ -56,6 +33,7 @@ public class UmbraQuest {
 
         try {
             SimpleAudioPlayer audioPlayer = new SimpleAudioPlayer();
+            audioPlayer.playSound(audioPlayer.filePath);
         } catch (Exception ignored) {}
 
         ////////////////
@@ -68,7 +46,7 @@ public class UmbraQuest {
             public void actionPerformed(ActionEvent e) {
                 if (!game.isActive) {
                     game.startGame();
-                    frame.remove(startButton);
+                    startButton.setVisible(false);
                     frame.pack();
                 }
             }
