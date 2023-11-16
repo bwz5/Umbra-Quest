@@ -28,12 +28,9 @@ public class Interactable {
     public void collisionDetector(int playerx, int playery, GameComponent frame, Character player){
         if (collided(playerx,playery) && !player.collectedKey){
             JOptionPane.showMessageDialog(frame,"You need the key to enter.");
-        } else if (collided(playerx,playery) && player.collectedKey){
-            onceCollided(frame);
         }
     }
     public void onceCollided(GameComponent game){
-        game.isActive = false;
-        game.gameOver = true;
+
     }
 }

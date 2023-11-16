@@ -26,6 +26,7 @@ public class tileDrawer {
 
         for (int i = worldX; i < worldX+ 10; i++){
             for (int j = worldY ; j <  worldY +10; j++){
+
                 String tempString = records.get(i).get(j);
                 if (tempString.equals("1")){
                     try {
@@ -104,7 +105,9 @@ public class tileDrawer {
                     if (!enemies.isEmpty()) {
                         for (Enemy k : enemies) {
                             if (k.isDead) {
-                                enemies.remove(k);
+                                try {
+                                    enemies.remove(k);
+                                } catch (Exception ignored){}
                                 records.get(i).set(j, "1");
                             }
                         }
@@ -161,6 +164,9 @@ public class tileDrawer {
                         if (!e.checkHit(k)){
                             k.drawProjectile(g,game);
                         }
+                    }
+                    if (enemies.isEmpty()){
+                        k.drawProjectile(g,game);
                     }
                 }
 

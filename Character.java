@@ -10,6 +10,8 @@ public class Character {
     int y ; // y position of the character
 
     int health;
+
+    AbilityBar abilityBar = new AbilityBar();
     int mana;
 
     boolean collectedKey = false;
@@ -46,6 +48,8 @@ public class Character {
             manaImage = imageIcon.getImage(); // transform it
 
         } catch (Exception ignored){}
+
+        abilityBar.addAbility("img/fireballright.png","fireball","X");
     }
 
     public void addMana(){
@@ -89,8 +93,8 @@ public class Character {
         int currentX = 15;
         int currentY = 435;
         for (int i = 0; i < health; i++){
-            g.drawImage(healthImage, currentX, currentY, 55, 55, null);
-            currentX += 50;
+            g.drawImage(healthImage, currentX, currentY, 35, 35, null);
+            currentX += 35;
         }
         currentX = 30;
         currentY = 415;
@@ -98,7 +102,7 @@ public class Character {
             g.drawImage(manaImage, currentX, currentY, 25, 25, null);
             currentX += 25;
         }
-
+        abilityBar.paintBar(g);
     }
 
 }

@@ -24,6 +24,7 @@ public class Inventory extends JLabel {
         Item temp = new Item(name, description);
         inventory.add(temp);
     }
+
     @Override
     public void paintComponent(Graphics g){
         g.setColor(new Color(0.81f, 0.63f, 0.48f, 0.9f));
@@ -39,6 +40,7 @@ public class Inventory extends JLabel {
         }
         for (Item i : inventory){
             temp += i.name + ": " + i.description + "\n";
+
         }
         this.setText(temp);
     }

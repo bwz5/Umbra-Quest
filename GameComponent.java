@@ -14,8 +14,10 @@ import java.util.Timer;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-public class GameComponent extends JPanel implements MouseListener, KeyListener {
+public class GameComponent extends JPanel implements MouseListener, KeyListener, Runnable {
     boolean isActive;
+
+    int levelCount = 1;
 
     boolean showingInventory = false;
 
@@ -27,8 +29,8 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
 
     Character player = new Character();
 
-    int worldX = 20 ; // top left starting location X
-    int worldY = 22; // top left starting location Y
+    int worldX = 20 ; // top left starting location X  25
+    int worldY = 22; // top left starting location Y  27
 
     Lighting lighting = new Lighting(this,500); // for the lighting effect of the game
 
@@ -41,13 +43,17 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
 
     List<Projectile> projectilesList = new LinkedList<>();
 
+    Thread gameThread;
+
+    String gameMap = "maps/level1.csv";
+
     public GameComponent() {
 
         this.setFocusable(true);
         this.requestFocus();
 
         this.add(player.inventory);
-
+        gameThread = new Thread(this);
         this.setLayout(new BorderLayout());
 
         // This component reacts to mouse events.
@@ -60,9 +66,7 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
         setPreferredSize(new Dimension(500, 500));
 
         readWorldMap();
-
-
-
+        gameThread.start();
     }
 
     public void startGame() {
@@ -71,19 +75,24 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
     }
     public void stopGame() {
         System.out.println("thank you for playing my game");
+    }
 
+    @Override
+    public void run(){
+        repaint();
     }
 
     @Override
     public void paintComponent(Graphics g) {
+        try {
+            gameThread.sleep(50);
+        } catch (Exception ignored) {}
         super.paintComponent(g);
         paintFunctions(g);
         if (showingInventory){
             player.inventory.paintComponent(g);
         }
         repaint();
-
-
     }
 
     public void paintFunctions(Graphics g){
@@ -212,7 +221,6 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
 
             } else {
                 showingInventory = false;
-
             }
         }
 
@@ -225,10 +233,29 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
             player.inventory.addItem("Key", "A magical key that opens a door.");
             player.collectedKey = true;
         }
+        if (!this.interactables.isEmpty()){
+            try {
+            for (Interactable i : interactables){
+                if (i.collided(worldX + 5,worldY + 5) && player.collectedKey){
+                    worldX = 20;
+                    worldY = 22;
+                    levelCount += 1;
+                    gameMap = "maps/level" + this.levelCount + ".csv";
+                    readWorldMap();
 
-        for (Interactable i : interactables){
-            i.collisionDetector(worldX+5,worldY +5, this, player);
+                        interactables.remove(i);
+                    //player.collectedKey = false;
+                    player.collectedKey = false;
+                } else {
+                    if (i.collided(worldX + 5, worldY + 5) && !player.collectedKey){
+                        JOptionPane.showMessageDialog(this,"You need the key to enter.");
+                    }
+                }
+            }
+            } catch (Exception ignored){}
+
         }
+
         if (toggleMovementCount % 4 == 0){
             player.addMana();
         }
@@ -241,9 +268,10 @@ public class GameComponent extends JPanel implements MouseListener, KeyListener 
     }
 
     public void readWorldMap(){
+        entities.clear();
         try {
             records = new ArrayList<>();
-            BufferedReader br = new BufferedReader(new FileReader("maps/level1.csv"));
+            BufferedReader br = new BufferedReader(new FileReader(this.gameMap));
             String line;
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");

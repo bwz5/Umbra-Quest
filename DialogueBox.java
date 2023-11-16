@@ -38,6 +38,10 @@ public class DialogueBox extends JOptionPane{
                 JOptionPane.INFORMATION_MESSAGE,
                 icon);
     }
+
+    public void openTrade(JComponent game, Merchant m){
+        JOptionPane.showOptionDialog(game,"Buy an item from my shop!","Trade",JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,m.inventory,1);
+    }
     public void setText(String text){
         this.text = text;
     }
